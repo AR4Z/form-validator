@@ -57,6 +57,16 @@ class Validator {
           /^(("[\w-\s]+")|([\w\-]+(?:\.[\w\-]+)*)|("[\w-\s]+")([\w\-]+(?:\.[\w\-]+)*))(@((?:[\w\-]+\.)*\w[\w\-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][0-9]\.|1[0-9]{2}\.|[0-9]{1,2}\.))((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\.){2}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\]?$)/i
         ).test(value);
       },
+      dateMax: (value, params) => {
+        const valueDate = new Date(value);
+        const maxDate = new Date(params);
+        return valueDate <= maxDate;
+      },
+      dateLess: (value, params) => {
+        const valueDate = new Date(value);
+        const lessDate = new Date(params);
+        return valueDate >= lessDate;
+      },
       ...settings.customRules,
       remote: (value, params) => {
         const body = {};
@@ -92,6 +102,8 @@ class Validator {
       max: "This field must have be less than {0}",
       email: "Email address is invalid",
       remote: "Invalid value",
+      dateMax: "The max date is {0}",
+      dateLess: "The less date is {0}",
       ...settings.customMessages
     };
 
@@ -222,17 +234,17 @@ class Validator {
       if (rule === "remote" && !error) {
         validPromises.push(
           ruleMethod(fieldElement.value, ruleParams)
-            .then(() => {
-              this.fields[fieldElement.getAttribute("name")].error = null;
-              return Promise.resolve();
-            })
-            .catch(() => {
-              this.fields[
-                fieldElement.getAttribute("name")
-              ].error = this.errorMessages[rule];
-              error = true;
-              return Promise.reject();
-            })
+          .then(() => {
+            this.fields[fieldElement.getAttribute("name")].error = null;
+            return Promise.resolve();
+          })
+          .catch(() => {
+            this.fields[
+              fieldElement.getAttribute("name")
+            ].error = this.errorMessages[rule];
+            error = true;
+            return Promise.reject();
+          })
         );
       } else {
         validPromises.push(
