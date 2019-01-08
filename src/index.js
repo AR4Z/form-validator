@@ -234,17 +234,17 @@ class Validator {
       if (rule === "remote" && !error) {
         validPromises.push(
           ruleMethod(fieldElement.value, ruleParams)
-          .then(() => {
-            this.fields[fieldElement.getAttribute("name")].error = null;
-            return Promise.resolve();
-          })
-          .catch(() => {
-            this.fields[
-              fieldElement.getAttribute("name")
-            ].error = this.errorMessages[rule];
-            error = true;
-            return Promise.reject();
-          })
+            .then(() => {
+              this.fields[fieldElement.getAttribute("name")].error = null;
+              return Promise.resolve();
+            })
+            .catch(() => {
+              this.fields[
+                fieldElement.getAttribute("name")
+              ].error = this.errorMessages[rule];
+              error = true;
+              return Promise.reject();
+            })
         );
       } else {
         validPromises.push(
