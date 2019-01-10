@@ -67,6 +67,17 @@ class Validator {
         const lessDate = new Date(params);
         return valueDate >= lessDate;
       },
+      validDateFormat: (value, param) => {
+        const regExDateFormats = {
+          "yyyy-mm-dd": /^\d{4}-\d{2}-\d{2}$/,
+          "yyyy/mm/dd": /^\d{4}\/\d{2}\/\d{2}$/
+        };
+        const regExDate = regExDateFormats[param];
+        if (!value.match(regExDate)) return false; // Invalid format
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return false; // Invalid date
+        return date.toISOString().slice(0, 10) === value;
+      },
       ...settings.rules,
       remote: (value, params) => {
         const body = {};
@@ -104,6 +115,7 @@ class Validator {
       remote: "Invalid value",
       dateMax: "The max date is {0}",
       dateLess: "The less date is {0}",
+      validDateFormat: "Date is invalid should be {0}",
       ...settings.messages
     };
 
