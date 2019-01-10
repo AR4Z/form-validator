@@ -239,9 +239,11 @@ class Validator {
               return Promise.resolve();
             })
             .catch(() => {
-              this.fields[
-                fieldElement.getAttribute("name")
-              ].error = this.errorMessages[rule];
+              this.fields[fieldElement.getAttribute("name")].error =
+                fieldElement.getAttribute("name") in this.errorMessages &&
+                rule in this.errorMessages[fieldElement.getAttribute("name")]
+                  ? this.errorMessages[fieldElement.getAttribute("name")][rule]
+                  : this.errorMessages[rule];
               error = true;
               return Promise.reject();
             })
