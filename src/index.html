@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Production</title>
+</head>
+
+<body>
+  <form id="myForm">
+    <input name="username" />
+  </form>
+  <h1>Hola</h1>
+  <script type="text/javascript">
+    const myForm = document.getElementById('myForm');
+    let validator;
+    
+    document.addEventListener("DOMContentLoaded", () => {
+      validator = new Validator(myForm, {
+        fields: {
+          username: {
+            required: true
+          }
+        },
+        messages: {
+          username: {
+            required: 'Hiii'
+          }
+        }
+      })
+    });
+  </script>
+</body>
+
+</html>

@@ -67,7 +67,7 @@ class Validator {
         const lessDate = new Date(params);
         return valueDate >= lessDate;
       },
-      ...settings.customRules,
+      ...settings.rules,
       remote: (value, params) => {
         const body = {};
         body[params.nameData] = value;
@@ -104,7 +104,7 @@ class Validator {
       remote: "Invalid value",
       dateMax: "The max date is {0}",
       dateLess: "The less date is {0}",
-      ...settings.customMessages
+      ...settings.messages
     };
 
     this.handleForm = form;
@@ -257,9 +257,11 @@ class Validator {
               this.fields[fieldElement.getAttribute("name")].error = null;
               return resolve();
             } else {
-              this.fields[
-                fieldElement.getAttribute("name")
-              ].error = this.errorMessages[rule];
+              this.fields[fieldElement.getAttribute("name")].error =
+                fieldElement.getAttribute("name") in this.errorMessages &&
+                rule in this.errorMessages[fieldElement.getAttribute("name")]
+                  ? this.errorMessages[fieldElement.getAttribute("name")][rule]
+                  : this.errorMessages[rule];
               error = true;
               return reject();
             }
