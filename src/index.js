@@ -117,22 +117,25 @@ class Validator {
     }
 
     this.errorMessages = {
-      required: "This field is required",
-      minLength: "This field must have at least {0} characters",
-      maxLength: "This field must have max {0} characters",
-      notZero: "This field cannot be zero",
-      int: "This field must be a integer",
-      float: "This field must be a float",
-      min: "This field must have be greater than {0}",
-      max: "This field must have be less than {0}",
-      email: "Email address is invalid",
-      remote: "Invalid value",
-      dateMax: "The max date is {0}",
-      dateLess: "The less date is {0}",
-      date: "Date is invalid should be {0}",
+      required: () => {
+        console.log("swws");
+        return "This field is required";
+      },
+      minLength: param => `This field must have at least ${param} characters`,
+      maxLength: param => `This field must have max ${param} characters`,
+      notZero: () => "This field cannot be zero",
+      int: () => "This field must be a integer",
+      float: () => "This field must be a float",
+      min: param => `This field must have be greater than ${param}`,
+      max: param => `This field must have be less than ${param}`,
+      email: () => "Email address is invalid",
+      remote: () => "Invalid value",
+      dateMax: param => `The max date is ${param}`,
+      dateLess: param => `The less date is ${param}`,
+      date: param => `Date is invalid should be ${param}`,
       ...settings.messages
     };
-    
+
     this._addEventChange();
     this._addEventSubmit();
   }
@@ -186,10 +189,14 @@ class Validator {
   _getFields(fieldNames, messages) {
     const fields = {};
     let customMessages = {};
-    
+
     for (var fieldName in fieldNames) {
       customMessages = {};
-      if (fieldName in messages && typeof messages[fieldName] == "object") {
+      if (
+        messages &&
+        fieldName in messages &&
+        typeof messages[fieldName] == "object"
+      ) {
         customMessages = messages[fieldName];
       }
 
@@ -273,8 +280,10 @@ class Validator {
               this.fields[fieldElement.getAttribute("name")].error =
                 rule in
                 this.fields[fieldElement.getAttribute("name")].customMessages
-                  ? this.errorMessages[fieldElement.getAttribute("name")][rule]
-                  : this.errorMessages[rule];
+                  ? this.fields[
+                      fieldElement.getAttribute("name")
+                    ].customMessages[rule](ruleParams)
+                  : this.errorMessages[rule](ruleParams);
               error = true;
               return Promise.reject();
             })
@@ -293,8 +302,10 @@ class Validator {
               this.fields[fieldElement.getAttribute("name")].error =
                 rule in
                 this.fields[fieldElement.getAttribute("name")].customMessages
-                  ? this.errorMessages[fieldElement.getAttribute("name")][rule]
-                  : this.errorMessages[rule];
+                  ? this.fields[
+                      fieldElement.getAttribute("name")
+                    ].customMessages[rule](ruleParams)
+                  : this.errorMessages[rule](ruleParams);
               error = true;
               return reject();
             }
