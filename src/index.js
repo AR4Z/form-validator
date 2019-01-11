@@ -82,6 +82,13 @@ class Validator {
         return date.toISOString().slice(0, 10) === value;
       },
 
+      confirmation: (value, param) => {
+        const fieldToConfirm = this.handleForm.querySelector(
+          `input[name="${param}"]`
+        );
+        return fieldToConfirm.value == value;
+      },
+
       ...settings.rules,
 
       remote: (value, params) => {
@@ -133,6 +140,7 @@ class Validator {
       dateMax: param => `The max date is ${param}`,
       dateLess: param => `The less date is ${param}`,
       date: param => `Date is invalid should be ${param}`,
+      confirmation: param => `This field should be equals to ${param}`,
       ...settings.messages
     };
 
