@@ -217,18 +217,21 @@ class Validator {
     for (var keyField in fields) {
       const field = fields[keyField];
       const fieldElement = field["fieldElement"];
+      const fieldName = fieldElement.getAttribute("name");
 
       if (
-        !fieldElement.parentNode.getElementsByClassName("validate-error").length
+        !fieldElement.parentNode.querySelectorAll(
+          `div[data-form-validator="${fieldName}"]`
+        ).length
       ) {
         const errorDivNode = document.createElement("div");
-        errorDivNode.className = "validate-error";
-        fieldElement.parentNode.appendChild(errorDivNode);
+        errorDivNode.setAttribute("data-form-validator", fieldName);
+        fieldElement.after(errorDivNode);
       }
 
-      const errorDivNode = fieldElement.parentNode.getElementsByClassName(
-        "validate-error"
-      )[0];
+      const errorDivNode = fieldElement.parentNode.querySelector(
+        `div[data-form-validator="${fieldName}"]`
+      );
 
       if (field.error) {
         errorDivNode.innerHTML = field.error;

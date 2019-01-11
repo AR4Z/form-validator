@@ -8,8 +8,8 @@
 
 <body>
   <form id="myForm">
-    <input name="username" />
-    <input name="birthDate" />
+    <input name="username" placeholder="username"/>
+    <input name="birthDate" placeholder="date"/>
   </form>
   <h1>Hola</h1>
   <script type="text/javascript">
@@ -23,7 +23,7 @@
             required: true
           },
           birthDate: {
-            validDateFormat: 'yyyy-mm-dd'
+            date: 'yyyy-mm-dd'
           }
         }
       })
