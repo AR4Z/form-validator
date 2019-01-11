@@ -57,17 +57,20 @@ class Validator {
           /^(("[\w-\s]+")|([\w\-]+(?:\.[\w\-]+)*)|("[\w-\s]+")([\w\-]+(?:\.[\w\-]+)*))(@((?:[\w\-]+\.)*\w[\w\-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][0-9]\.|1[0-9]{2}\.|[0-9]{1,2}\.))((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\.){2}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\]?$)/i
         ).test(value);
       },
+
       dateMax: (value, params) => {
         const valueDate = new Date(value);
         const maxDate = new Date(params);
         return valueDate <= maxDate;
       },
+
       dateLess: (value, params) => {
         const valueDate = new Date(value);
         const lessDate = new Date(params);
         return valueDate >= lessDate;
       },
-      validDateFormat: (value, param) => {
+
+      date: (value, param) => {
         const regExDateFormats = {
           "yyyy-mm-dd": /^\d{4}-\d{2}-\d{2}$/,
           "yyyy/mm/dd": /^\d{4}\/\d{2}\/\d{2}$/
@@ -78,7 +81,9 @@ class Validator {
         if (Number.isNaN(date.getTime())) return false; // Invalid date
         return date.toISOString().slice(0, 10) === value;
       },
+
       ...settings.rules,
+
       remote: (value, params) => {
         const body = {};
         body[params.nameData] = value;
@@ -102,6 +107,15 @@ class Validator {
       }
     };
 
+    this.handleForm = form;
+    this.fields = this._getFields(settings.fields, settings.messages);
+
+    for (let key in settings.messages) {
+      if (typeof settings.messages[key] == "object") {
+        delete settings.messages[key];
+      }
+    }
+
     this.errorMessages = {
       required: "This field is required",
       minLength: "This field must have at least {0} characters",
@@ -115,12 +129,10 @@ class Validator {
       remote: "Invalid value",
       dateMax: "The max date is {0}",
       dateLess: "The less date is {0}",
-      validDateFormat: "Date is invalid should be {0}",
+      date: "Date is invalid should be {0}",
       ...settings.messages
     };
-
-    this.handleForm = form;
-    this.fields = this._getFields(settings.fields);
+    
     this._addEventChange();
     this._addEventSubmit();
   }
@@ -171,13 +183,20 @@ class Validator {
     });
   }
 
-  _getFields(fieldNames) {
+  _getFields(fieldNames, messages) {
     const fields = {};
-
+    let customMessages = {};
+    
     for (var fieldName in fieldNames) {
+      customMessages = {};
+      if (fieldName in messages && typeof messages[fieldName] == "object") {
+        customMessages = messages[fieldName];
+      }
+
       fields[fieldName] = {
         rules: fieldNames[fieldName],
         fieldElement: this.handleForm.querySelector(`[name='${fieldName}']`),
+        customMessages: customMessages || customMessages,
         error: null
       };
     }
@@ -252,8 +271,8 @@ class Validator {
             })
             .catch(() => {
               this.fields[fieldElement.getAttribute("name")].error =
-                fieldElement.getAttribute("name") in this.errorMessages &&
-                rule in this.errorMessages[fieldElement.getAttribute("name")]
+                rule in
+                this.fields[fieldElement.getAttribute("name")].customMessages
                   ? this.errorMessages[fieldElement.getAttribute("name")][rule]
                   : this.errorMessages[rule];
               error = true;
@@ -272,8 +291,8 @@ class Validator {
               return resolve();
             } else {
               this.fields[fieldElement.getAttribute("name")].error =
-                fieldElement.getAttribute("name") in this.errorMessages &&
-                rule in this.errorMessages[fieldElement.getAttribute("name")]
+                rule in
+                this.fields[fieldElement.getAttribute("name")].customMessages
                   ? this.errorMessages[fieldElement.getAttribute("name")][rule]
                   : this.errorMessages[rule];
               error = true;
