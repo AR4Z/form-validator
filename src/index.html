@@ -10,6 +10,7 @@
   <form id="myForm">
     <input name="username" placeholder="username"/>
     <input name="birthDate" placeholder="date"/>
+    <input type="submit"/>
   </form>
   <h1>Hola</h1>
   <script type="text/javascript">
@@ -25,6 +26,12 @@
           birthDate: {
             date: 'yyyy-mm-dd'
           }
+        },
+        submit: (e) => {
+          return new Promise((resolve, reject) => {
+            alert(e);
+            return resolve();
+          })
         }
       })
     });

@@ -146,6 +146,7 @@ class Validator {
 
     this._addEventChange();
     this._addEventSubmit();
+    this.submit = settings.submit || Promise.resolve();
   }
 
   _handleChange(e) {
@@ -159,6 +160,7 @@ class Validator {
   }
 
   _handleSubmit(e) {
+    e.preventDefault();
     const fieldsNames = Object.keys(this.fields);
     const validePromisesFields = [];
 
@@ -168,14 +170,14 @@ class Validator {
       validePromisesFields.push(this.validate(fieldElement));
     });
 
-    Promise.all(validePromisesFields)
+    return Promise.all(validePromisesFields)
       .then(() => {
-        return true;
+        this.submit(e)
+          .then(() => this.handleForm.submit())
+          .catch(() => false);
       })
       .catch(() => {
-        e.preventDefault();
         this._showErrors();
-        return false;
       });
   }
 
