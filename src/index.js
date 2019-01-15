@@ -1,35 +1,39 @@
 class Validator {
   constructor(form, settings) {
     this.rules = {
-      required: value => {
-        return value !== "";
+      required: field => {
+        if(field.type === 'radio' || field.type === 'checkbox') {
+          return !!this.handleForm.querySelector(`input[name="${field.name}"]:checked`)
+        }
+
+        return field.value !== "";
       },
 
-      minLength: (value, params) => {
-        return value.length >= params;
+      minLength: (field, params) => {
+        return field.value.length >= params;
       },
 
-      maxLength: (value, params) => {
-        return value.length <= params;
+      maxLength: (field, params) => {
+        return field.value.length <= params;
       },
 
-      notZero: value => {
-        return parseInt(value, 10) > 0;
+      notZero: field => {
+        return parseInt(field.value, 10) > 0;
       },
 
-      int: value => {
-        return new RegExp(/^[0-9]+$/gi).test(value);
+      int: field => {
+        return new RegExp(/^[0-9]+$/gi).test(field.value);
       },
 
-      float: value => {
-        value = value.toString().replace(/\,/, ".");
+      float: field => {
+        const value = field.value.toString().replace(/\,/, ".");
         return (
           this.int(value) || new RegExp(/^([0-9])+(\.)([0-9]+$)/gi).test(value)
         );
       },
 
-      min: (value, param) => {
-        value = value.toString().replace(/\,/, ".");
+      min: (field, param) => {
+        const value = field.value.toString().replace(/\,/, ".");
 
         if (
           new RegExp(/^[0-9]+$/gi).test(value) ||
@@ -40,8 +44,8 @@ class Validator {
         return parseInt(value, 10) >= parseInt(param, 10);
       },
 
-      max: (value, param) => {
-        value = value.toString().replace(/\,/, ".");
+      max: (field, param) => {
+        const value = field.value.toString().replace(/\,/, ".");
 
         if (
           new RegExp(/^[0-9]+$/gi).test(value) ||
@@ -52,48 +56,48 @@ class Validator {
         return parseInt(value, 10) <= parseInt(param, 10);
       },
 
-      email: value => {
+      email: field => {
         return new RegExp(
           /^(("[\w-\s]+")|([\w\-]+(?:\.[\w\-]+)*)|("[\w-\s]+")([\w\-]+(?:\.[\w\-]+)*))(@((?:[\w\-]+\.)*\w[\w\-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][0-9]\.|1[0-9]{2}\.|[0-9]{1,2}\.))((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\.){2}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\]?$)/i
-        ).test(value);
+        ).test(field.value);
       },
 
-      dateMax: (value, params) => {
-        const valueDate = new Date(value);
+      dateMax: (field, params) => {
+        const valueDate = new Date(field.value);
         const maxDate = new Date(params);
         return valueDate <= maxDate;
       },
 
-      dateLess: (value, params) => {
-        const valueDate = new Date(value);
+      dateLess: (field, params) => {
+        const valueDate = new Date(field.value);
         const lessDate = new Date(params);
         return valueDate >= lessDate;
       },
 
-      date: (value, param) => {
+      date: (field, param) => {
         const regExDateFormats = {
           "yyyy-mm-dd": /^\d{4}-\d{2}-\d{2}$/,
           "yyyy/mm/dd": /^\d{4}\/\d{2}\/\d{2}$/
         };
         const regExDate = regExDateFormats[param];
-        if (!value.match(regExDate)) return false; // Invalid format
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return false; // Invalid date
-        return date.toISOString().slice(0, 10) === value;
+        if (!field.value.match(regExDate)) return false;
+        const date = new Date(field.value);
+        if (Number.isNaN(date.getTime())) return false;
+        return date.toISOString().slice(0, 10) === field.value;
       },
 
-      confirmation: (value, param) => {
+      confirmation: (field, param) => {
         const fieldToConfirm = this.handleForm.querySelector(
           `input[name="${param}"]`
         );
-        return fieldToConfirm.value == value;
+        return fieldToConfirm.value === field.value;
       },
 
       ...settings.rules,
 
-      remote: (value, params) => {
+      remote: (field, params) => {
         const body = {};
-        body[params.nameData] = value;
+        body[params.nameData] = field.value;
         const data = {
           method: params.method,
           body: JSON.stringify(body),
@@ -150,7 +154,7 @@ class Validator {
   }
 
   _handleChange(e) {
-    this.validate(e.target)
+    this.validate([e.target])
       .then(() => {
         this._hideErrors();
       })
@@ -165,9 +169,9 @@ class Validator {
     const validePromisesFields = [];
 
     fieldsNames.forEach(fieldName => {
-      const fieldElement = this.fields[fieldName]["fieldElement"];
+      const fieldElements = this.fields[fieldName]["fieldElements"];
 
-      validePromisesFields.push(this.validate(fieldElement));
+      validePromisesFields.push(this.validate(fieldElements));
     });
 
     return Promise.all(validePromisesFields)
@@ -195,10 +199,12 @@ class Validator {
     const events = ["change", "keyup", "paste", "blur"];
 
     fieldsNames.forEach(fieldName => {
-      const fieldElement = this.fields[fieldName]["fieldElement"];
+      const fieldElements = this.fields[fieldName]["fieldElements"];
 
       events.forEach(event => {
-        fieldElement.addEventListener(event, e => this._handleChange(e));
+        fieldElements.forEach(fieldElement => {
+          fieldElement.addEventListener(event, e => this._handleChange(e));
+        })
       });
     });
   }
@@ -219,7 +225,7 @@ class Validator {
 
       fields[fieldName] = {
         rules: fieldNames[fieldName],
-        fieldElement: this.handleForm.querySelector(`[name='${fieldName}']`),
+        fieldElements: Array.from(this.handleForm.querySelectorAll(`[name='${fieldName}']`)),
         customMessages: customMessages || customMessages,
         error: null
       };
@@ -233,7 +239,7 @@ class Validator {
 
     for (var keyField in fields) {
       const field = fields[keyField];
-      const fieldElement = field["fieldElement"];
+      const fieldElement = field["fieldElements"][field["fieldElements"].length - 1];
       const fieldName = fieldElement.getAttribute("name");
 
       if (
@@ -263,7 +269,7 @@ class Validator {
 
     for (var keyField in fields) {
       const field = fields[keyField];
-      const fieldElement = field["fieldElement"];
+      const fieldElement = field["fieldElements"][field["fieldElements"].length - 1];
       const errorDivNode = fieldElement.parentNode.getElementsByClassName(
         "validate-error"
       )[0];
@@ -276,8 +282,8 @@ class Validator {
     }
   }
 
-  validate(field) {
-    const fieldElement = field;
+  validate(fields) {
+    const fieldElement = fields[fields.length - 1];
     const rulesForThisField = Object.keys(
       this.fields[fieldElement.getAttribute("name")].rules
     );
@@ -291,7 +297,7 @@ class Validator {
 
       if (rule === "remote" && !error) {
         validPromises.push(
-          ruleMethod(fieldElement.value, ruleParams)
+          ruleMethod(fieldElement, ruleParams)
             .then(() => {
               this.fields[fieldElement.getAttribute("name")].error = null;
               return Promise.resolve();
@@ -315,7 +321,7 @@ class Validator {
               return reject();
             }
 
-            if (ruleMethod(fieldElement.value, ruleParams)) {
+            if (ruleMethod(fieldElement, ruleParams)) {
               this.fields[fieldElement.getAttribute("name")].error = null;
               return resolve();
             } else {
