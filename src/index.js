@@ -173,7 +173,10 @@ class Validator {
     return Promise.all(validePromisesFields)
       .then(() => {
         this.submit(e)
-          .then(() => this.handleForm.submit())
+          .then(() => {
+            console.log("Enviando");
+            this.handleForm.submit();
+          })
           .catch(() => false);
       })
       .catch(() => {
@@ -189,10 +192,14 @@ class Validator {
 
   _addEventChange() {
     const fieldsNames = Object.keys(this.fields);
+    const events = ["change", "keyup", "paste", "blur"];
+
     fieldsNames.forEach(fieldName => {
       const fieldElement = this.fields[fieldName]["fieldElement"];
 
-      fieldElement.addEventListener("keyup", e => this._handleChange(e));
+      events.forEach(event => {
+        fieldElement.addEventListener(event, e => this._handleChange(e));
+      });
     });
   }
 
